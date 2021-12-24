@@ -13,10 +13,10 @@ MainWindow::MainWindow(QWidget *parent)
     ui->setupUi(this);
 
     undoStack = new QUndoStack(this);
+    qApp->installEventFilter(this);
+    this->setMouseTracking(true);
 
-
-
-
+    setMouseTracking(true);
     undoAction = undoStack->createUndoAction(this, "Undo");
     undoAction->setShortcuts(QKeySequence::Undo);
 
@@ -38,7 +38,8 @@ MainWindow::MainWindow(QWidget *parent)
     undoView->setWindowTitle(tr("Command List"));
     undoView->show();
     undoView->setAttribute(Qt::WA_QuitOnClose, false);
-
+    ui->graphicsView->viewport()->setMouseTracking(true);
+    ui->pushButton->setMouseTracking(true);
 
 
 }
@@ -101,19 +102,39 @@ void MainWindow::mousePressEvent(QMouseEvent *event)
 
    if(event->button()==Qt::RightButton){
       LastPoint=event->pos();
+      oldItem=new DiagramItem(DiagramItem::Box,LastPoint,LastPoint);
+      oldPos=QPointF(LastPoint.rx()-305,LastPoint.ry()-108);
+      diagramScene->addItem(oldItem);
+      diagramScene->update();
       isDrawing=true;
    }
 }
 
+void MainWindow::mouseMoveEvent(QMouseEvent *event){
+    if(event->buttons()==Qt::RightButton && isDrawing){
+        auto* myDiagramItem = new DiagramItem(DiagramItem::Box,LastPoint,EndPoint);
+        auto initialPosition = QPointF(LastPoint.rx()-305,LastPoint.ry()-108);
+        QString valueAsString = QString::number(LastPoint.rx());
+        QString valueAsString2= QString::number(LastPoint.ry());
+        ui->label->setText(valueAsString);
+        ui->label_2->setText(valueAsString2);
+        diagramScene->addItem(myDiagramItem);
+        myDiagramItem->setPos(initialPosition);
+        diagramScene->clearSelection();
+        diagramScene->update();
+        diagramScene->removeItem(oldItem);
+        oldItem=myDiagramItem;
+        diagramScene->update();
+
+        EndPoint=event->pos();
+    }
+}
 void MainWindow::mouseReleaseEvent(QMouseEvent *event)
 {
     if(event->button()==Qt::RightButton && isDrawing){
        EndPoint=event->pos();
        isDrawing=false;
-       QString valueAsString = QString::number(LastPoint.rx());
-       QString valueAsString2= QString::number(LastPoint.ry());
-       ui->label->setText(valueAsString);
-       ui->label_2->setText(valueAsString2);
+        diagramScene->removeItem(oldItem);
        QUndoCommand *addCommand = new AddCommand(DiagramItem::Box, diagramScene,LastPoint,EndPoint);
        undoStack->push(addCommand);
 
@@ -132,5 +153,13 @@ void MainWindow::deleteItem()
     undoStack->push(deleteCommand);
 }
 
-
+bool MainWindow::eventFilter(QObject *obj, QEvent *event)
+{
+  if (event->type() == QEvent::MouseMove)
+  {
+    QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(event);
+    statusBar()->showMessage(QString("Mouse move (%1,%2)").arg(mouseEvent->pos().x()).arg(mouseEvent->pos().y()));
+  }
+  return false;
+}
 

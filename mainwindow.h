@@ -48,9 +48,12 @@ private:
     QPointF LastPoint;
     QPointF EndPoint;
     int type;
-
+    DiagramItem* oldItem;
+    QPointF oldPos;
     void mousePressEvent(QMouseEvent *event) override;
 
     void mouseReleaseEvent(QMouseEvent *event) override;
+    void mouseMoveEvent(QMouseEvent *event) override;
+    bool eventFilter(QObject *obj, QEvent *event);
 };
 #endif // MAINWINDOW_H
