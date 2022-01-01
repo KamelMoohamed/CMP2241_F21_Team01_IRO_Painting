@@ -20,11 +20,12 @@ Romb::~Romb()
 }
 
 
-// Реализуем метод отрисовки
 void Romb::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
 
     painter->setPen(QPen(shapeColor, LineWeight));
+    shapeName = "Circle";
+
 
 
 

@@ -19,11 +19,12 @@ Line::~Line()
 }
 
 
-// Реализуем метод отрисовки
 void Line::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
 
     painter->setPen(QPen(shapeColor, LineWeight));
+    shapeName = "Line";
+
 
     QLineF line(startPoint().x(),startPoint().y(),endPoint().x(),endPoint().y());
     painter->drawLine(line);

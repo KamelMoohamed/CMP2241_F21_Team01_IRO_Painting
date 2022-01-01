@@ -1,5 +1,7 @@
 #include "square.h"
 #include <QPainter>
+#include<QUndoCommand>
+#include "commands.h"
 
 Square::Square(QPointF point,QColor color,int LineWeight, QObject *parent) :
     Figure(point,parent)
@@ -11,15 +13,18 @@ Square::Square(QPointF point,QColor color,int LineWeight, QObject *parent) :
     rCount++;
 }
 
+
+
 Square::~Square()
 {
 
 }
 
-// Реализуем метод отрисовки
 void Square::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
     painter->setPen(QPen(shapeColor, LineWeight));
+    shapeName = "Rectangle";
+
 
     QRectF rect(endPoint().x() > startPoint().x() ? startPoint().x() : endPoint().x(),
                 endPoint().y() > startPoint().y() ? startPoint().y() : endPoint().y(),

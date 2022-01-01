@@ -7,16 +7,16 @@
 #include <QVector>
 #include "figure.h"
 #include <QDebug>
+#include <QGraphicsScene>
+#include <QGraphicsView>
 
-
-
-PaintScene::PaintScene(QObject *parent) : QGraphicsScene(parent)
+PaintScene::PaintScene(QGraphicsView *view, QObject *parent) : QGraphicsScene(parent)
 {
-undoStack = new QUndoStack(this);
-paintingColor=Qt::black;
-LineWeight=1;
-ItemsVec=new QVector<Figure*>();
-
+    this->view=view;
+    undoStack = new QUndoStack(this);
+    paintingColor=Qt::black;
+    LineWeight=1;
+    ItemsVec=new QVector<Figure*>();
 }
 
 PaintScene::~PaintScene()
@@ -46,15 +46,10 @@ void PaintScene::setWeight(int Value)
 
 void PaintScene::mouseMoveEvent(QGraphicsSceneMouseEvent *event)
 {
-    /* Устанавливаем конечную координату положения мыши
-     * в текущую отрисовываемую фигуру
-     * */
+
     EndPoint=event->scenePos();
     tempFigure->setEndPoint(EndPoint);
 
-    /* Обновляем содержимое сцены,
-     * необходимо для устранения артефактов при отрисовке фигур
-     * */
 
     this->update(QRectF(0,0,this->width(), this->height()));
 }
@@ -70,10 +65,7 @@ void PaintScene::mouseReleaseEvent(QGraphicsSceneMouseEvent *event)
 
 }
 
-/* Как только нажали кнопку мыши, создаём фигуру одного из трёх типов
- * и помещаем её на сцену, сохранив указатель на неё в переменной
- * tempFigure
- * */
+
 void PaintScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
 {
     switch (m_typeFigure) {
@@ -114,6 +106,35 @@ void PaintScene::mousePressEvent(QGraphicsSceneMouseEvent *event)
         tempFigure = item;
 
         break;
+    }
+    case EraserType :{ //this is the case for when you're selecting the eraser button and clicked on something
+        //debug message, because i love it when clicking a button does something.
+        qDebug()<<"shape is being deleted.";
+        //this method gets the position of the mouse.
+        QPointF mousePos(event->buttonDownScenePos(Qt::LeftButton).x(),
+                             event->buttonDownScenePos(Qt::LeftButton).y());
+        //this gets the items at this position and puts them in the list.
+        const QVector<QGraphicsItem *> deletedItems = items(mousePos);
+        //then we delete the item from the view and update.
+        if(deletedItems.isEmpty()==false){
+            qDebug()<<"you deleted :";
+            //we delete the item from the vector (ItemsVec) , NOT DONE.
+
+
+            //we add the command for the deletion to the undo stack.
+            QUndoCommand *deleteCommand = new DeleteCommand(this,(Figure*)deletedItems[0],startPoint);
+            undoStack->push(deleteCommand);
+
+            //we add a command for the deletion (we  remove the first item in the list (i.e)element on top)
+            removeItem(deletedItems[0]);
+
+        }else qDebug()<<"no elements selcted";
+        //we make the command for the delete and send it to undo stack, somehow.
+
+        //debug message for the items vector.
+//        for (int i=0;i<ItemsVec->size();i++){
+//           qDebug()<<(*ItemsVec)[i]->name;
+//        }
     }
     default:{
         Square *item = new Square(event->scenePos(),paintingColor,LineWeight);
